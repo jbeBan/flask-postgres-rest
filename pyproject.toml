@@ -1,0 +1,48 @@
+[project]
+name = "flask-postgres-rest"
+version = "0.1.0"
+description = "Small REST service: Flask, PostgreSQL, SQLAlchemy, pydantic, Alembic"
+requires-python = ">=3.11"
+dependencies = [
+    "flask~=3.1",
+    "sqlalchemy~=2.0",
+    "psycopg[binary]~=3.2",
+    "pydantic~=2.7",
+    "alembic~=1.13",
+    "gunicorn~=23.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest~=8.0",
+    "ruff~=0.6",
+    "mypy~=1.11",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["migrations/versions/"]
+
+[[tool.mypy.overrides]]
+module = ["alembic.*"]
+ignore_missing_imports = true
