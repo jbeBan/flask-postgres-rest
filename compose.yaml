@@ -1,0 +1,49 @@
+# Local development stack: Postgres, a one-shot migration, and the API.
+#   docker compose up --build        # API on http://localhost:8000
+# The credentials below are for local use only.
+name: flask-postgres-rest
+
+# migrate and api run the same image: one `image:` name means one build, not two.
+x-app: &app
+  image: flask-postgres-rest:dev
+  build: .
+  environment:
+    DATABASE_URL: postgresql://postgres:postgres@db:5432/surveys
+    WEB_CONCURRENCY: "2" # gunicorn workers (ignored by the migrate command)
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: surveys
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Also creates the surveys_test and surveys_explain databases (first start only).
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:${DB_PORT:-5434}:5432" # for running pytest / scripts.explain from the host
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d surveys"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:
