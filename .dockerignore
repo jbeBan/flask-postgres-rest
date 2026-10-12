@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+.pgdata
+.env
+**/__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+tests
+scripts
+README.md
+compose.yaml
+Dockerfile
+.dockerignore
